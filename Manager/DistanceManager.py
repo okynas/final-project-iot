@@ -10,7 +10,7 @@ class DistanceManager:
         """
         self.distance_sensor = DistanceSensor(i2c_bus=i2c_bus, i2c_address=i2c_address, ranging_mode=1)
         self.road_follower = road_follower
-        self.log_callback = log_callback or (lambda msg: None)
+        self.log_callback = log_callback if log_callback else print
         self.target_distance = target_distance
 
         self.platoon_speed = road_follower.base_speed

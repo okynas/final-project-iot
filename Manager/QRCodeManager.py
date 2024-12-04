@@ -9,7 +9,7 @@ class QRCodeManager:
         self.qr_processor = QRCodeProcessor(camera)
         self.platoon_manager = platoon_manager
         self.distance_manager = distance_manager
-        self.log_callback = log_callback or (lambda msg: None)
+        self.log_callback = log_callback if log_callback else print
         self.timeout = timeout
         self.last_qr_data = None
         self.last_update_time = time.time()
