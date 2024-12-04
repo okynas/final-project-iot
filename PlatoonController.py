@@ -83,12 +83,13 @@ class PlatoonController:
         if hasattr(self, "status_text"):
             status_lines = []
             for robot_id, status in self.robot_status.items():
-                leader = " (LEDER)" if status.get("role") == "leader" else ""
                 front_robot = status.get("front_robot_id", "Ingen")
+                role = status.get("role", "Ingen")
                 speed = status.get("platoon_speed", "Ukjent")
                 state = status.get("state", "Ukjent")
+                queue_position = status.get("queue_position", "Ukjent")
                 status_lines.append(
-                    f"{robot_id}{leader}: Status={state}, Fart={speed}, Bak={front_robot}"
+                    f"{robot_id}({role}): Status={state}, Fart={speed}, Bak={front_robot}, Kø plassering={queue_position}"
                 )
             self.status_text.set("\n".join(status_lines))
 
