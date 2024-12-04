@@ -93,7 +93,7 @@ class PlatoonManager:
         if command == "set_speed":
             new_speed = data.get("speed")
             if new_speed is not None:
-                self.platoon_speed = new_speed
+                self.distance_manager.update_platoon_speed(new_speed)
                 self.log(f"Robot {self.robot_id} oppdaterte sin fart til {self.platoon_speed:.2f}")
         elif command == "change_status":
             new_state = data.get("new_status")
