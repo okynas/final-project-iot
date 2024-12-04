@@ -90,7 +90,17 @@ class PlatoonManager:
     def handle_dynamic_commands(self, data):
         """Håndterer kommandoer som 'join_queue' og 'leave_queue'."""
         command = data.get("command")
-        if command == "join_queue":
+        if command == "set_speed":
+            new_speed = data.get("speed")
+            if new_speed is not None:
+                self.platoon_speed = new_speed
+                self.log(f"Robot {self.robot_id} oppdaterte sin fart til {self.platoon_speed:.2f}")
+        elif command == "change_status":
+            new_state = data.get("new_status")
+            if new_state and new_state in RobotState.__members__:
+                self.road_follower.state = RobotState[new_state]
+                self.log(f"Robot {self.robot_id} oppdaterte sin status til {new_state}")
+        elif command == "join_queue":
             new_follower_id = data.get("robot_id")
             if new_follower_id not in self.followers:
                 self.followers.append(new_follower_id)
@@ -105,14 +115,16 @@ class PlatoonManager:
         """Callback når vi kobler til MQTT-broker."""
         self.log(f"Robot {self.robot_id} koblet til MQTT Broker")
         self.mqtt_client.subscribe("platoon/commands")
+        self.mqtt_client.subscribe(f"platoon/commands/{self.robot_id}")
         self.mqtt_client.subscribe(f"platoon/status/#")
 
     def on_message(self, client, userdata, msg):
         """Behandle meldinger fra MQTT."""
         try:
             data = json.loads(msg.payload.decode('utf-8'))
-
-            if msg.topic.startswith(f"platoon/status/{self.front_robot_id}"):
+            if msg.topic == f"platoon/commands/{self.robot_id}" or msg.topic == "platoon/commands":
+                self.handle_dynamic_commands(data)
+            elif msg.topic.startswith(f"platoon/status/{self.front_robot_id}"):
                 if "platoon_speed" in data:
                     self.distance_manager.update_platoon_speed(data["platoon_speed"])
                     self.log(
@@ -127,10 +139,6 @@ class PlatoonManager:
 
             if msg.topic.startswith("platoon/status/"):
                 self.update_platoon_structure(data)
-
-            elif "command" in data:
-                self.handle_dynamic_commands(data)
-
         except Exception as e:
             self.log(f"Feil i on_message: {e}")
 
