@@ -1,7 +1,7 @@
 import time
 import collections
-from Robot.Functions.DistanceSensor import DistanceSensor
-from Robot.Functions.PIDController import PIDController
+from Functions.DistanceSensor import DistanceSensor
+from Functions.PIDController import PIDController
 
 class DistanceManager:
     def __init__(self, i2c_bus, i2c_address, road_follower, log_callback=None, target_distance=300, pid_params=None):
