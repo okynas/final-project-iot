@@ -2,6 +2,7 @@ import threading
 import time
 from jetbot import Robot, Camera
 from Manager.RoadFollower import RoadFollower, RobotState
+from Functions.USBCamera import USBCamera, CameraWidget
 import ipywidgets as widgets
 from IPython.display import display
 import cv2
@@ -25,6 +26,7 @@ class RobotManager:
 
         self.camera_feed_thread = None
 
+        # Widgets
         self.start_button = widgets.Button(description='Start', button_style='success')
         self.stop_button = widgets.Button(description='Stop', button_style='danger')
         self.status_label = widgets.Label(value="Status: Idle")
@@ -33,9 +35,8 @@ class RobotManager:
         self.steering_label = widgets.Label(value="Steering Angle: N/A")
         self.hough_label = widgets.Label(value="Hough Transform: Unknown")
         self.image_widget = widgets.Image(format='png', width=400, height=400)
-        self.gray_image_widget = widgets.Image(format='png', width=224, height=224)
-        self.blurred_image_widget = widgets.Image(format='png', width=224, height=224)
-        self.binary_image_widget = widgets.Image(format='png', width=224, height=224)
+        self.masked_image_widget = widgets.Image(format='png', width=224, height=224)
+        self.masked_cleand_image_widget = widgets.Image(format='png', width=224, height=224)
         self.log_area = widgets.Textarea(value="", description="Log:", layout=widgets.Layout(width='100%', height='200px'))
 
         self.max_speed_slider = widgets.FloatSlider(value=self.base_speed, min=0.1, max=1.0, step=0.05, description='Max Speed', readout_format='.2f')
@@ -72,9 +73,8 @@ class RobotManager:
 
         debug_image_widget = widgets.VBox([
             widgets.HBox([
-                self.gray_image_widget,
-                self.blurred_image_widget,
-                self.binary_image_widget,
+                self.masked_image_widget,
+                self.masked_cleand_image_widget,
             ])
         ])
 
@@ -86,6 +86,7 @@ class RobotManager:
             debug_image_widget
         ]))
 
+        # Start kameraoppdateringen ved init
         self.start_camera_feed()
 
     def log_message(self, message):
@@ -131,9 +132,8 @@ class RobotManager:
                 self.steering_label.value = f"Steering Angle: {result['steering_angle']:.2f}"
                 self.hough_label.value = f"Hough Transform: {result.get('hough_transform', 'Unknown')}"
                 self.image_widget.value = self.convert_image_to_bytes(result['processed_images']['result'])
-                self.gray_image_widget.value = self.convert_image_to_bytes(result['processed_images']['grayscale'])
-                self.blurred_image_widget.value = self.convert_image_to_bytes(result['processed_images']['blurred'])
-                self.binary_image_widget.value = self.convert_image_to_bytes(result['processed_images']['binary'])
+                self.masked_image_widget.value = self.convert_image_to_bytes(result['processed_images']['masked'])
+                self.masked_cleand_image_widget.value = self.convert_image_to_bytes(result['processed_images']['masked_cleand'])
 
                 time.sleep(0.1)
             except Exception as e:
@@ -152,13 +152,16 @@ class RobotManager:
 
     def update_values(self, _):
         """Oppdaterer RoadFollower-parametere basert på sliderverdier."""
+        # Oppdater hastigheter
         self.road_follower.base_speed = self.max_speed_slider.value
         self.road_follower.min_speed = self.min_speed_slider.value
 
+        # Oppdater PID-parametere
         self.road_follower.pid.kp = self.kp_slider.value
         self.road_follower.pid.ki = self.ki_slider.value
         self.road_follower.pid.kd = self.kd_slider.value
 
+        # Logg oppdateringene
         self.log_message(
             f"Updated: Max Speed={self.max_speed_slider.value}, Min Speed={self.min_speed_slider.value}, "
             f"Kp={self.kp_slider.value}, Ki={self.ki_slider.value}, Kd={self.kd_slider.value}"
@@ -167,7 +170,7 @@ class RobotManager:
 if __name__ == "__main__":
     try:
         robot = Robot()
-        camera = Camera.instance(width=224, height=224)
+        camera = USBCamera.instance()
         manager = RobotManager(robot, camera, base_speed=0.3, min_speed=0.20)
     except Exception as e:
         print(f"Error initializing RobotManager: {e}")

@@ -1,44 +1,64 @@
 import cv2
 import numpy as np
+import logging
 
 class LineDetector:
-    def __init__(self, camera, width=224, height=224):
+    def __init__(self, camera, width=320, height=240):
         self.camera = camera
         self.image_height = height
         self.image_width = width
-        self.roi = 0.55
+        self.roi = 0.6
         self.roi_height = int(self.image_height * (1 - self.roi))
         self.previous_steering_angle = None
 
+        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
     def preprocess_image(self, image):
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        _, binary = cv2.threshold(blurred, 106, 255, cv2.THRESH_BINARY_INV)
-        roi = binary[self.roi_height:, :]
+        try:
+            roi = image[self.roi_height:, :]
 
-        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(roi, connectivity=8)
-        areas = stats[1:, cv2.CC_STAT_AREA]
-        road = "big" if len(areas) == 0 or np.mean(areas) <= 70 else "small"
+            lower_rgb = np.array([10, 10, 10])
+            upper_rgb = np.array([98, 98, 98])
 
-        if road == "small":
-            min_area = np.mean(areas) * 0.8
-            roi = self.filter_areas(roi, labels, stats, min_area)
-            roi = self.apply_morphological_operations(roi)
+            mask = cv2.inRange(roi, lower_rgb, upper_rgb)
 
-        return gray, blurred, roi, binary, road
+            mask_cleaned = self.apply_morphological_operations(mask, kernel_size=3)
+
+            num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask_cleaned, connectivity=8)
+            areas = stats[1:, cv2.CC_STAT_AREA]
+
+            road = "big" if len(areas) == 0 or np.mean(areas) <= 70 else "small"
+
+            if road == "small":
+                min_area = np.mean(areas) * 0.8
+                mask_cleaned = self.filter_areas(mask_cleaned, labels, stats, min_area)
+
+            return roi, mask, mask_cleaned, road
+        except Exception as e:
+            logging.error(f"Feil under preprocess_image: {e}")
+            raise
 
     def filter_areas(self, roi, labels, stats, min_area):
-        filtered_binary = np.zeros_like(roi)
-        for label, area in enumerate(stats[1:, cv2.CC_STAT_AREA], start=1):
-            if area >= min_area:
-                filtered_binary[labels == label] = 255
-        return filtered_binary
+        try:
+            filtered_binary = np.zeros_like(roi)
+            for label, area in enumerate(stats[1:, cv2.CC_STAT_AREA], start=1):
+                if area >= min_area:
+                    filtered_binary[labels == label] = 255
+            return filtered_binary
+        except Exception as e:
+            logging.error(f"Feil under filter_areas: {e}")
+            raise
 
     def apply_morphological_operations(self, binary_image, kernel_size=3):
-        kernel = np.ones((kernel_size, kernel_size), np.uint8)
-        binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, kernel)
-        binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
-        return binary_image
+        try:
+            kernel = np.ones((kernel_size, kernel_size), np.uint8)
+            binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, kernel)
+            binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
+            return binary_image
+
+        except Exception as e:
+            logging.error(f"Feil under apply_morphological_operations: {e}")
+            raise
 
     def detect_lines(self, binary_image, road):
         roi = binary_image
@@ -69,19 +89,23 @@ class LineDetector:
         return left_lines, right_lines, roi, hough_status
 
     def detect_hough_lines(self, roi, road_type):
-        params = {
-            "small": {"threshold": 30, "minLineLength": 40, "maxLineGap": 30},
-            "big": {"threshold": 20, "minLineLength": 30, "maxLineGap": 50}
-        }
-        config = params[road_type]
-        return cv2.HoughLinesP(
-            roi,
-            rho=1,
-            theta=np.pi / 180,
-            threshold=config["threshold"],
-            minLineLength=config["minLineLength"],
-            maxLineGap=config["maxLineGap"]
-        )
+        try:
+            params = {
+                "small": {"threshold": 30, "minLineLength": 40, "maxLineGap": 30},
+                "big": {"threshold": 20, "minLineLength": 30, "maxLineGap": 50}
+            }
+            config = params[road_type]
+            return cv2.HoughLinesP(
+                roi,
+                rho=1,
+                theta=np.pi / 180,
+                threshold=config["threshold"],
+                minLineLength=config["minLineLength"],
+                maxLineGap=config["maxLineGap"]
+            )
+        except Exception as e:
+            logging.error(f"Feil under detect_hough_lines: {e}")
+            raise
 
     def calculate_steering_angle(self, left_lines, right_lines, road):
         image_center = self.image_width // 2
@@ -203,57 +227,69 @@ class LineDetector:
             x1, y1, x2, y2 = line
             cv2.line(image, (x1, y1 + self.roi_height), (x2, y2 + self.roi_height), color, 2)
 
-    def process_frame(self):
-        image = self.camera.value
-        image = cv2.resize(image, (self.image_width, self.image_height), interpolation=cv2.INTER_AREA)
-        gray, blurred, roi, binary, road = self.preprocess_image(image)
+    def process_frame(self, visualize=True):
+        try:
+            image = self.camera.value
+            if image is None:
+                logging.warning("Ingen bilde fra kameraet")
+                return None
 
-        left_lines, right_lines, roi, hough_status = self.detect_lines(roi, road)
-        steering_angle, center_x, image_center, deviation, bottom_points, status_message = self.calculate_steering_angle(
-            left_lines, right_lines, road)
+            if image.shape[:2] != (self.image_height, self.image_width):
+                image = cv2.resize(image, (self.image_width, self.image_height), interpolation=cv2.INTER_AREA)
+            roi, masked, masked_cleand, road = self.preprocess_image(image)
 
-        visualization = image.copy()
+            left_lines, right_lines, roi, hough_status = self.detect_lines(masked_cleand, road)
+            steering_angle, center_x, image_center, deviation, bottom_points, status_message = self.calculate_steering_angle(
+                left_lines, right_lines, road)
 
-        if left_lines or right_lines:
-            self.draw_lines(visualization, left_lines, (0, 0, 255))
-            self.draw_lines(visualization, right_lines, (0, 255, 0))
+            if visualize:
+                visualization = image.copy()
 
-            if bottom_points:
-                if bottom_points.get('single_line', False):
-                    bottom = bottom_points['bottom_point']
-                    top = bottom_points['top_point']
+                if left_lines or right_lines:
+                    self.draw_lines(visualization, left_lines, (0, 0, 255))
+                    self.draw_lines(visualization, right_lines, (0, 255, 0))
 
-                    cv2.circle(visualization, bottom, 5, (255, 255, 0), -1)
-                    cv2.circle(visualization, top, 5, (255, 255, 0), -1)
-                    cv2.line(visualization, bottom, top, (0, 255, 255), 2)
-                else:
-                    left_bottom = bottom_points['left']
-                    right_bottom = bottom_points['right']
+                    if bottom_points:
+                        if bottom_points.get('single_line', False):
+                            bottom = bottom_points['bottom_point']
+                            top = bottom_points['top_point']
 
-                    cv2.circle(visualization, left_bottom, 5, (255, 255, 0), -1)
-                    cv2.circle(visualization, right_bottom, 5, (255, 255, 0), -1)
-                    cv2.line(visualization, left_bottom, right_bottom, (255, 0, 0), 2)
+                            cv2.circle(visualization, bottom, 5, (255, 255, 0), -1)
+                            cv2.circle(visualization, top, 5, (255, 255, 0), -1)
+                            cv2.line(visualization, bottom, top, (0, 255, 255), 2)
+                        else:
+                            left_bottom = bottom_points['left']
+                            right_bottom = bottom_points['right']
 
-        mode = "Single Line" if bottom_points and bottom_points.get('single_line') else "Two Lines"
+                            cv2.circle(visualization, left_bottom, 5, (255, 255, 0), -1)
+                            cv2.circle(visualization, right_bottom, 5, (255, 255, 0), -1)
+                            cv2.line(visualization, left_bottom, right_bottom, (255, 0, 0), 2)
+                pass
 
-        angle = bottom_points.get('line_angle', 0) if bottom_points else 0
-        hough_status = hough_status if hough_status else "Unknown"
+            mode = "Single Line" if bottom_points and bottom_points.get('single_line') else "Two Lines"
 
-        return {
-            'steering_angle': steering_angle,
-            'mode': mode,
-            'angle': angle,
-            'hough_transform': hough_status,
-            'processed_images': {
-                'original': cv2.cvtColor(image, cv2.COLOR_BGR2RGB),
-                'grayscale': gray,
-                'blurred': blurred,
-                'binary': binary,
-                'roi': roi,
-                'result': cv2.cvtColor(visualization, cv2.COLOR_BGR2RGB)
-            },
-            'status_message': status_message
-        }
+            angle = bottom_points.get('line_angle', 0) if bottom_points else 0
+            hough_status = hough_status if hough_status else "Unknown"
+
+            return {
+                'steering_angle': steering_angle,
+                'mode': mode,
+                'angle': angle,
+                'hough_transform': hough_status,
+                'processed_images': {
+                    'original': cv2.cvtColor(image, cv2.COLOR_BGR2RGB),
+                    'masked': masked,
+                    'masked_cleand': masked_cleand,
+                    'roi': roi,
+                    'result': cv2.cvtColor(visualization, cv2.COLOR_BGR2RGB)
+                },
+                'status_message': status_message
+            }
+
+        except Exception as e:
+            logging.error(f"Feil under process_frame: {e}")
+            raise
 
     def stop(self):
+        logging.info("Stopper LineDetector")
         self.camera.stop()
