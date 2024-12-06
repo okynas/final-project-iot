@@ -1,8 +1,9 @@
 import time
 import numpy as np
 from enum import Enum, auto
-from Functions.LineDetector import LineDetector
-from Functions.PIDController import PIDController
+
+from Robot.Functions.LineDetector import LineDetector
+from Robot.Functions.PIDController import PIDController
 
 class RobotState(Enum):
     IDLE = auto()
