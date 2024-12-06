@@ -1,0 +1,30 @@
+# JetBot Configuration File
+[current-jetbot]
+id = 4
+
+[default-handling]
+speed = 3 # in meter per second
+distance = 500 # in millimeter
+
+[mqtt]
+ip = "158.39.163.9"
+port = 1883
+
+[jetbot-1]
+id = 1
+robot_id = "Turbo-Turid"
+
+# 2
+[jetbot-2]
+id = 2
+robot_id = "Rolige-Randi"
+
+# 3
+[jetbot-3]
+id = 3
+robot_id = "Vinglete-Vera"
+
+# 4
+[jetbot-4]
+id = 4
+robot_id = "Rask-Rut"
