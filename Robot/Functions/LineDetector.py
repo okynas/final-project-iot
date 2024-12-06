@@ -18,7 +18,7 @@ class LineDetector:
             roi = image[self.roi_height:, :]
 
             lower_rgb = np.array([10, 10, 10])
-            upper_rgb = np.array([98, 98, 98])
+            upper_rgb = np.array([96, 96, 96])
 
             mask = cv2.inRange(roi, lower_rgb, upper_rgb)
 
