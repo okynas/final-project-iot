@@ -106,15 +106,3 @@ class ConfigManager:
         self.default_handler = self._read_default_handling(toml_file)
         self.mqtt_handler = self._read_mqtt(toml_file)
 
-
-# Example usage
-if __name__ == "__main__":
-    # Initialize the ConfigManager
-    config_manager = ConfigManager()
-
-    # Access and print MQTT configuration
-    print(config_manager.mqtt_handler.mqtt_ip)
-    print(config_manager.mqtt_handler.mqtt_port)
-
-    # Access and print robot configuration
-    print(config_manager.robot.robot_id)

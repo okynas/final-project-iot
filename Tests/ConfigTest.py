@@ -1,5 +1,5 @@
 import unittest
-from Manager.ConfigManager import ConfigManager
+from Robot.Manager.ConfigManager import ConfigManager
 
 
 class ConfigManagerTests(unittest.TestCase):
