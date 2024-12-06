@@ -1,5 +1,5 @@
 import time
-from Functions.QRCodeProcessor import QRCodeProcessor
+from Robot.Functions.QRCodeProcessor import QRCodeProcessor
 
 class QRCodeManager:
     def __init__(self, camera, platoon_manager, distance_manager, log_callback=None, timeout=2.0):

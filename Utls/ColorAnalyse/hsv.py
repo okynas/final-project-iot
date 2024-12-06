@@ -4,8 +4,8 @@ import json
 from tkinter import Tk, Button, Label, filedialog, messagebox
 from matplotlib import pyplot as plt
 
-roi_file_with_lines = "../roi_with_lines.json"
-roi_file_without_lines = "../roi_without_lines.json"
+roi_file_with_lines = "ROICords/roi_with_lines.json"
+roi_file_without_lines = "ROICords/roi_without_lines.json"
 
 def select_multiple_rois(image, label):
     display_image = image.copy()
