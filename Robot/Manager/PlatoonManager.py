@@ -2,7 +2,7 @@ import json
 import threading
 import time
 import paho.mqtt.client as mqtt
-from Robot.Manager.RoadFollower import RobotState
+from Manager.RoadFollower import RobotState
 
 class PlatoonManager:
     def __init__(self, robot_id, mqtt_broker, port, road_follower, distance_manager, log_callback=None):
