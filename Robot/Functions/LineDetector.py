@@ -4,11 +4,11 @@ import logging
 
 
 class LineDetector:
-    def __init__(self, camera, width=320, height=240):
+    def __init__(self, camera, width=320, height=240, roi=0.6):
         self.camera = camera
         self.image_height = height
         self.image_width = width
-        self.roi = 0.5
+        self.roi = roi
         self.roi_height = int(self.image_height * (1 - self.roi))
         self.previous_steering_angle = None
 
@@ -16,7 +16,6 @@ class LineDetector:
 
     def preprocess_image(self, image):
         try:
-
             roi = image[self.roi_height:, :]
             """
             hls = cv2.cvtColor(roi, cv2.COLOR_RGB2HLS)
@@ -55,13 +54,24 @@ class LineDetector:
 
     def filter_areas(self, roi, labels, stats, min_area):
         try:
-            # Bruk numpy-masker for å unngå løkker
-            areas = stats[1:, cv2.CC_STAT_AREA]
-            valid_labels = np.where(areas >= min_area)[0] + 1
-            filtered_binary = np.isin(labels, valid_labels).astype(np.uint8) * 255
+            filtered_binary = np.zeros_like(roi)
+            for label, area in enumerate(stats[1:, cv2.CC_STAT_AREA], start=1):
+                if area >= min_area:
+                    filtered_binary[labels == label] = 255
             return filtered_binary
         except Exception as e:
             logging.error(f"Feil under filter_areas: {e}")
+            raise
+
+    def apply_morphological_operations(self, binary_image, kernel_size=3):
+        try:
+            kernel = np.ones((kernel_size, kernel_size), np.uint8)
+            binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, kernel)
+            binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
+            return binary_image
+
+        except Exception as e:
+            logging.error(f"Feil under apply_morphological_operations: {e}")
             raise
 
     def detect_lines(self, binary_image, road):
