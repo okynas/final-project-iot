@@ -149,29 +149,3 @@ class RobotManager:
         self.log_message(
             f"Updated: Max Speed={self.max_speed_slider.value}, Min Speed={self.min_speed_slider.value}, "
         )
-
-        """
-        if __name__ == "__main__":
-    try:
-        robot = Robot()
-        config = ConfigManager()
-        camera = Camera.instance(width=600, height=600)
-
-        mqtt_broker = "158.39.162.129"
-        port = 1883
-        robot_id = "Turbo-Turid"
-
-        manager = RobotManager(
-            robot=robot,
-            camera=camera,
-            mqtt_broker_ip=mqtt_broker,
-            port=port,
-            robot_id=robot_id,
-            base_speed=0.25,
-            min_speed=0.1
-        )
-
-        print("Systemet er klart. Kontroller via UI.")
-    except Exception as e:
-        print(f"Feil ved oppstart: {e}")
-        """
