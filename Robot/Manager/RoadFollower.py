@@ -15,7 +15,7 @@ class RoadFollower:
     def __init__(self, robot, camera, base_speed=0.4, min_speed=0.1, pid_params=None, log_callback=None, roi=0.6):
         self.robot = robot
         self.camera = camera
-        self.detector = LineDetector(camera=self.camera, roi=0.6)
+        self.line_detector = LineDetector(camera=self.camera, roi=0.6)
         self.state = RobotState.IDLE
 
         pid_params = pid_params or {"kp": 0.016, "ki": 0.0000, "kd": 0.004}
@@ -59,7 +59,7 @@ class RoadFollower:
         self.previous_time = current_time
 
         try:
-            result = self.detector.process_frame()
+            result = self.line_detector.process_frame()
             steering_angle = result['steering_angle']
 
             control_value = self.pid.compute(steering_angle, dt)

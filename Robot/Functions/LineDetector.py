@@ -2,6 +2,23 @@ import cv2
 import numpy as np
 import logging
 
+class Detector:
+    def __init__(self):
+        self.blur_size = (3,3)
+
+        self.threshold = 30
+        self.min_line_length = 70
+        self.max_line_gap = 30
+
+        # Oppdater Canny values
+        self.canny_low = 50
+        self.canny_high = 150
+
+    def get_blur(self, image):
+        return cv2.GaussianBlur(image, self.blur_size, 0)
+
+    def get_canny(self, image):
+        return cv2.Canny(image, self.canny_low, self.canny_high)
 
 class LineDetector:
     def __init__(self, camera, width=320, height=240, roi=0.6):
@@ -12,29 +29,19 @@ class LineDetector:
         self.roi_height = int(self.image_height * (1 - self.roi))
         self.previous_steering_angle = None
 
+        self.detector = Detector()
+
         logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
     def preprocess_image(self, image):
         try:
             roi = image[self.roi_height:, :]
-            """
-            hls = cv2.cvtColor(roi, cv2.COLOR_RGB2HLS)
 
-            lower_hsl = np.array([0, 15, 0])
-            upper_hsl = np.array([175, 85, 15])
-
-            mask = cv2.inRange(hls, lower_hsl, upper_hsl)
-
-            blur = cv2.GaussianBlur(mask, (1, 1), 0)
-            mask_cleaned = cv2.Canny(blur, 10, 100)
-            """
             gray = cv2.cvtColor(roi, cv2.COLOR_RGB2GRAY)
 
             # Perform edge detection
-            # mask = cv2.Canny(gray, 50, 150)
-
-            mask = cv2.GaussianBlur(gray, (3, 3), 0)
-            mask_cleaned = cv2.Canny(mask, 50, 150)
+            mask = self.detector.get_blur(gray)
+            mask_cleaned = self.detector.get_canny(mask)
 
             # mask_cleaned = mask
 
@@ -105,7 +112,7 @@ class LineDetector:
     def detect_hough_lines(self, roi, road_type):
         try:
             params = {
-                "small": {"threshold": 30, "minLineLength": 70, "maxLineGap": 30},
+                "small": {"threshold": self.detector.threshold, "minLineLength": self.detector.min_line_length, "maxLineGap": self.detector.max_line_gap},
                 "big": {"threshold": 20, "minLineLength": 30, "maxLineGap": 50}
             }
             config = params[road_type]
