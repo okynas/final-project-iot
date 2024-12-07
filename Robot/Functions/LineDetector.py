@@ -3,11 +3,11 @@ import numpy as np
 import logging
 
 class LineDetector:
-    def __init__(self, camera, width=320, height=240):
+    def __init__(self, camera, width=320, height=240, roi=0.6):
         self.camera = camera
         self.image_height = height
         self.image_width = width
-        self.roi = 0.6
+        self.roi = roi
         self.roi_height = int(self.image_height * (1 - self.roi))
         self.previous_steering_angle = None
 
