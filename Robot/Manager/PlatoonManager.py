@@ -17,7 +17,7 @@ class PlatoonManager:
         self.distance_manager = distance_manager
         self.log_callback = log_callback if log_callback else print
 
-        self.is_leader = False
+        self.is_leader = road_follower.is_leader
         self.queue_position = None
         self.front_robot_id = None
         self.followers = []
@@ -152,6 +152,7 @@ class PlatoonManager:
             self.determine_leader()
 
             self.steering_angle = self.road_follower.steering_angle
+            self.road_follower.is_leader = self.is_leader
 
             status = {
                 "robot_id": self.robot_id,

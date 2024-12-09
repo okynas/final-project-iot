@@ -23,6 +23,7 @@ class RoadFollower:
         self._steering_angle = 0
         self.base_speed = base_speed
         self.min_speed = min_speed
+        self._is_leader = True
         self.max_steering = 1
         self.previous_time = time.time()
         self.log_callback = log_callback if log_callback else print
@@ -31,6 +32,11 @@ class RoadFollower:
     def steering_angle(self):
         """Gir tilgang til styringsvinkelen."""
         return self._steering_angle
+
+    @property
+    def is_leader(self):
+        """Gir tilgang til is leader"""
+        return self._is_leader
 
     def log(self, message):
         """Logger en melding via log_callback."""
@@ -83,12 +89,35 @@ class RoadFollower:
         try:
             while True:
                 if self.state == RobotState.RUNNING:
-                    self.follow_line_single(speed=self.base_speed, min_speed=self.min_speed)
+                    if self.is_leader:
+                        self.follow_line_single(speed=self.base_speed, min_speed=self.min_speed)
+                    else:
+                        self.follow_robot(speed=self.base_speed, min_speed=self.min_speed)
                 elif self.state in {RobotState.PAUSED, RobotState.ERROR, RobotState.IDLE}:
                     self.stop()
                 time.sleep(0.1)
         except Exception as e:
             self.log(f"Uventet feil i follow_line_loop: {e}")
+            self.change_state(RobotState.ERROR)
+
+    def follow_robot(self, speed, min_speed):
+        if self.state != RobotState.RUNNING:
+            return
+
+        current_time = time.time()
+        dt = current_time - self.previous_time
+        self.previous_time = current_time
+
+        try:
+            control_value = self.pid.compute(self._steering_angle, dt)
+            control_value = np.clip(control_value, -self.max_steering, self.max_steering)
+
+            scaling_factor = np.exp(-abs(control_value) * 1)
+            adjusted_speed = max(speed * scaling_factor, min_speed)
+
+            self.steer(control_value, adjusted_speed)
+        except Exception as e:
+            self.log(f"Feil i follow_line_single: {e}")
             self.change_state(RobotState.ERROR)
 
     def stop(self):
@@ -99,3 +128,4 @@ class RoadFollower:
             self.log("Robot stoppet.")
         except AttributeError as e:
             self.log(f"Kunne ikke stoppe motorene: {e}")
+
