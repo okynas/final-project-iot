@@ -18,7 +18,7 @@ class DistanceManager:
         self.min_distance = 0
         self.max_distance = 1000
         self.min_speed = 0.1
-        self.max_speed = 0.6
+        self.max_speed = 0.4
         self.distance = 0
 
         self.recent_speeds = collections.deque(maxlen=10)
@@ -52,18 +52,30 @@ class DistanceManager:
 
                 if self.distance is not None and self.min_distance <= self.distance <= self.max_distance:
                     if self.distance > self.target_distance + 50:
-                        new_speed = min(self.max_speed, self.road_follower.base_speed + 0.05)
-                        self.log(f"Avstand {self.distance} mm er for stor. Øker hastigheten til {new_speed:.2f}.")
+                        # Øk hastigheten
+                        new_speed = self.road_follower.base_speed + 0.02
+                        self.log(
+                            f"Avstand {self.distance} mm er for stor. Beregnet hastighet før begrensning: {new_speed:.2f}.")
                     elif self.distance < self.target_distance - 50:
-                        new_speed = max(self.min_speed, self.road_follower.base_speed - 0.05)
-                        self.log(f"Avstand {self.distance} mm er for liten. Reduserer hastigheten til {new_speed:.2f}.")
+                        # Reduser hastigheten
+                        new_speed = self.road_follower.base_speed - 0.02
+                        self.log(
+                            f"Avstand {self.distance} mm er for liten. Beregnet hastighet før begrensning: {new_speed:.2f}.")
                     else:
+                        # Hold nåværende platoon_speed
                         new_speed = self.platoon_speed
-                        self.log(f"Avstand {self.distance} mm er innenfor målområdet. Beholder hastigheten {new_speed:.2f}.")
+                        self.log(
+                            f"Avstand {self.distance} mm er innenfor målområdet. Beholder hastigheten {new_speed:.2f}.")
 
+                    # Begrens hastigheten til tillatt område
+                    new_speed = max(self.min_speed, min(self.max_speed, new_speed))
+                    self.log(f"Hastigheten etter begrensning: {new_speed:.2f}.")
+
+                    # Oppdater base_speed og historikk
                     self.road_follower.base_speed = new_speed
                     self.recent_speeds.append(new_speed)
                 else:
+                    # Håndter ugyldig avstand
                     if self.recent_speeds:
                         average_speed = sum(self.recent_speeds) / len(self.recent_speeds)
                         self.road_follower.base_speed = average_speed
@@ -73,6 +85,7 @@ class DistanceManager:
                         self.log(
                             f"Ugyldig avstand og ingen historikk. Beholder platoon_speed: {self.platoon_speed:.2f}.")
             else:
+                # Avstandsmåling deaktivert
                 self.road_follower.base_speed = self.platoon_speed
                 self.log("Avstandsmåling deaktivert eller leder. Base speed satt til standard.")
 
