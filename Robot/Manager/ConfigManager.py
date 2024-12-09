@@ -30,10 +30,18 @@ class ConfigManager:
             self.id = 0               # Identifier for the robot
             self.robot_id = ""        # Unique robot ID (as per configuration)
 
-    def __init__(self, filename='config.toml'):
+    def log(self, message):
+        """Logger en melding via log_callback."""
+        self.log_callback(message)
+
+    def __init__(self, debug=True, filename='config.toml', log_callback=None):
         """
         Initializes the ConfigManager, setting up paths and loading configuration.
         """
+
+        self.debug = debug
+        self.log_callback = log_callback if log_callback else print
+
         # Path to the configuration file (relative to the script's directory)
         self._config_file_path = os.path.join(os.path.dirname(__file__), '..', filename)
 
@@ -97,7 +105,7 @@ class ConfigManager:
         # Open and parse the TOML configuration file
         with open(self._config_file_path, 'r') as file:
             toml_file = toml.load(file)
-            print(f"Read config OK")
+            if self.debug: self.log(f"Read config OK")
 
         # Load current JetBot ID from the configuration
         self.id = toml_file['current-jetbot']['id']
@@ -105,4 +113,3 @@ class ConfigManager:
         self.robot = self._read_jetbot(self.id, toml_file)
         self.default_handler = self._read_default_handling(toml_file)
         self.mqtt_handler = self._read_mqtt(toml_file)
-

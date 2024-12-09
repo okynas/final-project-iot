@@ -6,7 +6,7 @@ from IPython.display import display
 class USBCamera:
     _instance = None
 
-    def __init__(self, width=640, height=480, fps=30, pixel_format='MJPG', device='/dev/video0'):
+    def __init__(self, width=640, height=480, fps=20, pixel_format='MJPG', device='/dev/video0'):
         self.width = width
         self.height = height
         self.fps = fps

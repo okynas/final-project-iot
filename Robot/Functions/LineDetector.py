@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 import logging
 
+
 class LineDetector:
-    def __init__(self, camera, width=320, height=240, roi=0.6):
+    def __init__(self, camera, width=320, height=240, roi=0.5):
         self.camera = camera
         self.image_height = height
         self.image_width = width
@@ -15,14 +16,30 @@ class LineDetector:
 
     def preprocess_image(self, image):
         try:
+
             roi = image[self.roi_height:, :]
 
-            lower_rgb = np.array([10, 10, 10])
-            upper_rgb = np.array([96, 96, 96])
+            hls = cv2.cvtColor(roi, cv2.COLOR_RGB2HLS)
 
-            mask = cv2.inRange(roi, lower_rgb, upper_rgb)
+            lower_hsl = np.array([0, 15, 0])
+            upper_hsl = np.array([175, 85, 15])
 
-            mask_cleaned = self.apply_morphological_operations(mask, kernel_size=3)
+            mask = cv2.inRange(hls, lower_hsl, upper_hsl)
+
+            blur = cv2.GaussianBlur(mask, (3, 3), 0)
+            mask_cleaned = cv2.Canny(blur, 10, 100)
+
+            """
+            gray = cv2.cvtColor(roi, cv2.COLOR_RGB2GRAY)
+
+            # Perform edge detection
+            # mask = cv2.Canny(gray, 50, 150)
+
+            mask = cv2.GaussianBlur(gray, (3, 3), 0)
+            mask_cleaned = cv2.Canny(mask, 50, 150)
+            """
+
+            # mask_cleaned = mask
 
             num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask_cleaned, connectivity=8)
             areas = stats[1:, cv2.CC_STAT_AREA]
@@ -40,33 +57,19 @@ class LineDetector:
 
     def filter_areas(self, roi, labels, stats, min_area):
         try:
-            filtered_binary = np.zeros_like(roi)
-            for label, area in enumerate(stats[1:, cv2.CC_STAT_AREA], start=1):
-                if area >= min_area:
-                    filtered_binary[labels == label] = 255
+            # Bruk numpy-masker for å unngå løkker
+            areas = stats[1:, cv2.CC_STAT_AREA]
+            valid_labels = np.where(areas >= min_area)[0] + 1
+            filtered_binary = np.isin(labels, valid_labels).astype(np.uint8) * 255
             return filtered_binary
         except Exception as e:
             logging.error(f"Feil under filter_areas: {e}")
             raise
 
-    def apply_morphological_operations(self, binary_image, kernel_size=3):
-        try:
-            kernel = np.ones((kernel_size, kernel_size), np.uint8)
-            binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, kernel)
-            binary_image = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
-            return binary_image
-
-        except Exception as e:
-            logging.error(f"Feil under apply_morphological_operations: {e}")
-            raise
-
     def detect_lines(self, binary_image, road):
         roi = binary_image
 
-        if road == "small":
-            hough_status = "small road hough"
-        else:
-            hough_status = "big road hough"
+        hough_status = f"{road} road hough"
 
         lines = self.detect_hough_lines(binary_image, road)
 
@@ -91,7 +94,7 @@ class LineDetector:
     def detect_hough_lines(self, roi, road_type):
         try:
             params = {
-                "small": {"threshold": 30, "minLineLength": 40, "maxLineGap": 30},
+                "small": {"threshold": 30, "minLineLength": 70, "maxLineGap": 30},
                 "big": {"threshold": 20, "minLineLength": 30, "maxLineGap": 50}
             }
             config = params[road_type]
@@ -242,8 +245,8 @@ class LineDetector:
             steering_angle, center_x, image_center, deviation, bottom_points, status_message = self.calculate_steering_angle(
                 left_lines, right_lines, road)
 
+            visualization = image.copy()
             if visualize:
-                visualization = image.copy()
 
                 if left_lines or right_lines:
                     self.draw_lines(visualization, left_lines, (0, 0, 255))
