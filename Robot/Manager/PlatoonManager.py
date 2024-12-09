@@ -141,7 +141,7 @@ class PlatoonManager:
                             f"Robot {self.robot_id} oppdaterte sin state til {new_state} basert på {self.front_robot_id}")
 
                 if "steering_angle" in data:
-                    self.road_follower.set_steering_angle(data["steering_angle"])
+                    self.road_follower.set_steering_angle(data["steering_angle"], self.distance_manager.distance)
 
             if msg.topic.startswith("platoon/status/"):
                 self.update_platoon_structure(data)

@@ -19,6 +19,7 @@ class DistanceManager:
         self.max_distance = 1000
         self.min_speed = 0.1
         self.max_speed = 0.6
+        self.distance = 0
 
         self.recent_speeds = collections.deque(maxlen=10)
 
@@ -47,18 +48,18 @@ class DistanceManager:
         """Overvåker avstanden og justerer base_speed for å oppnå ønsket avstand."""
         while True:
             if self.enabled:
-                distance = self.distance_sensor.get_distance()
+                self.distance = self.distance_sensor.get_distance()
 
-                if distance is not None and self.min_distance <= distance <= self.max_distance:
-                    if distance > self.target_distance + 50:
+                if self.distance is not None and self.min_distance <= self.distance <= self.max_distance:
+                    if self.distance > self.target_distance + 50:
                         new_speed = min(self.max_speed, self.road_follower.base_speed + 0.05)
-                        self.log(f"Avstand {distance} mm er for stor. Øker hastigheten til {new_speed:.2f}.")
-                    elif distance < self.target_distance - 50:
+                        self.log(f"Avstand {self.distance} mm er for stor. Øker hastigheten til {new_speed:.2f}.")
+                    elif self.distance < self.target_distance - 50:
                         new_speed = max(self.min_speed, self.road_follower.base_speed - 0.05)
-                        self.log(f"Avstand {distance} mm er for liten. Reduserer hastigheten til {new_speed:.2f}.")
+                        self.log(f"Avstand {self.distance} mm er for liten. Reduserer hastigheten til {new_speed:.2f}.")
                     else:
                         new_speed = self.platoon_speed
-                        self.log(f"Avstand {distance} mm er innenfor målområdet. Beholder hastigheten {new_speed:.2f}.")
+                        self.log(f"Avstand {self.distance} mm er innenfor målområdet. Beholder hastigheten {new_speed:.2f}.")
 
                     self.road_follower.base_speed = new_speed
                     self.recent_speeds.append(new_speed)

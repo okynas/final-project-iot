@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import collections
 from enum import Enum, auto
 from Functions.LineDetector import LineDetector
 from Functions.PIDController import PIDController
@@ -27,6 +28,8 @@ class RoadFollower:
         self.max_steering = 1
         self.previous_time = time.time()
         self.log_callback = log_callback if log_callback else print
+        self.steering_queue = collections.deque()
+
 
     @property
     def steering_angle(self):
@@ -36,8 +39,28 @@ class RoadFollower:
     def set_is_leader(self, is_leader):
         self.is_leader = is_leader
 
-    def set_steering_angle(self, steering_angle):
-        self._steering_angle = steering_angle
+    def set_steering_angle(self, steering_angle, distance):
+        """Legger til styringsvinkelen i køen med en forsinkelse basert på avstanden."""
+        delay = self.calculate_delay(distance)
+        self.steering_queue.append((steering_angle, time.time() + delay))
+        self.log(f"Mottatt styringsvinkel {steering_angle}, vil brukes etter {delay:.2f} sek.")
+
+    def calculate_delay(self, distance):
+        """
+        Beregn forsinkelsen basert på avstanden til lederen.
+        Lengre avstand gir lengre forsinkelse, mens kortere avstand reduserer forsinkelsen.
+        """
+        min_delay = 0.1
+        max_delay = 1.0
+
+        if distance <= 0:
+            return max_delay
+
+        delay_factor = 0.005
+
+        calculated_delay = min_delay + (distance * delay_factor)
+
+        return min(max_delay, max(min_delay, calculated_delay))
 
     def log(self, message):
         """Logger en melding via log_callback."""
@@ -61,6 +84,15 @@ class RoadFollower:
             self.robot.right_motor.value = float(right_speed)
         except AttributeError as e:
             self.log(f"Feil ved styring: {e}")
+
+    def update_steering_angle(self):
+        """Oppdaterer styringsvinkelen fra køen hvis ventetiden er over."""
+        if self.steering_queue:
+            steering_angle, use_time = self.steering_queue[0]
+            if time.time() >= use_time:
+                self._steering_angle = steering_angle
+                self.steering_queue.popleft()
+                self.log(f"Bruker styringsvinkel: {self._steering_angle}")
 
     def follow_line_single(self, speed, min_speed):
         if self.state != RobotState.RUNNING:
@@ -90,6 +122,9 @@ class RoadFollower:
         try:
             while True:
                 if self.state == RobotState.RUNNING:
+
+                    self.update_steering_angle()
+
                     if self.is_leader:
                         self.follow_line_single(speed=self.base_speed, min_speed=self.min_speed)
                     else:
