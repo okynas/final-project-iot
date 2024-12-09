@@ -88,7 +88,7 @@ class PlatoonController:
                 speed = status.get("platoon_speed", "Ukjent")
                 state = status.get("state", "Ukjent")
                 queue_position = status.get("queue_position", "Ukjent")
-                steering_value = status.get("control_value")
+                steering_value = status.get("steering_value")
                 status_lines.append(
                     f"{robot_id}({role}): Status={state}, Fart={speed}, Bak={front_robot}, Kø plassering={queue_position}, Styrings Vinkel={steering_value}"
                 )

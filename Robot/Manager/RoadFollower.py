@@ -20,7 +20,7 @@ class RoadFollower:
         pid_params = pid_params or {"kp": 0.016, "ki": 0.0000, "kd": 0.004}
         self.pid = PIDController(kp=pid_params["kp"], ki=pid_params["ki"], kd=pid_params["kd"])
 
-        self.control_value = 0
+        self.steering_angle = 0
         self.base_speed = base_speed
         self.min_speed = min_speed
         self.max_steering = 1
@@ -41,7 +41,7 @@ class RoadFollower:
         if self.state != RobotState.RUNNING:
             return
 
-        steering_value = np.clip(steering_value, -1, 1)
+        self.steering_value = np.clip(steering_value, -1, 1)
         left_speed = speed * (1 + min(steering_value, 0))
         right_speed = speed * (1 - max(steering_value, 0))
         try:
@@ -60,10 +60,10 @@ class RoadFollower:
 
         try:
             result = self.detector.process_frame()
-            steering_angle = result['steering_angle']
+            self.steering_angle = result['steering_angle']
 
-            self.control_value = self.pid.compute(steering_angle, dt)
-            control_value = np.clip(self.control_value, -self.max_steering, self.max_steering)
+            control_value = self.pid.compute(self.steering_angle, dt)
+            control_value = np.clip(control_value, -self.max_steering, self.max_steering)
 
             scaling_factor = np.exp(-abs(control_value) * 1)
             adjusted_speed = max(speed * scaling_factor, min_speed)
