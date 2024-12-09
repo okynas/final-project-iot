@@ -45,39 +45,34 @@ class DistanceManager:
 
     def monitor_distance(self):
         """Overvåker avstanden og justerer base_speed for å oppnå ønsket avstand."""
-        previous_time = time.time()
-
         while True:
             if self.enabled:
                 distance = self.distance_sensor.get_distance()
-                current_time = time.time()
-                dt = current_time - previous_time
-                previous_time = current_time
 
                 if distance is not None and self.min_distance <= distance <= self.max_distance:
-                    error = distance - self.target_distance
+                    if distance > self.target_distance + 50:
+                        new_speed = min(self.max_speed, self.road_follower.base_speed + 0.05)
+                        self.log(f"Avstand {distance} mm er for stor. Øker hastigheten til {new_speed:.2f}.")
+                    elif distance < self.target_distance - 50:
+                        new_speed = max(self.min_speed, self.road_follower.base_speed - 0.05)
+                        self.log(f"Avstand {distance} mm er for liten. Reduserer hastigheten til {new_speed:.2f}.")
+                    else:
+                        new_speed = self.platoon_speed
+                        self.log(f"Avstand {distance} mm er innenfor målområdet. Beholder hastigheten {new_speed:.2f}.")
 
-                    speed_adjustment = self.pid_controller.compute(error, dt)
-
-                    adjusted_speed = min(self.max_speed, max(self.min_speed, self.platoon_speed + speed_adjustment))
-
-                    #self.road_follower.base_speed = adjusted_speed
-                    self.log(
-                        f"Avstand: {distance} mm | Feil: {error} | PID-justering: {speed_adjustment:.2f} | "
-                        f"Ny base_speed: {adjusted_speed:.2f}")
+                    self.road_follower.base_speed = new_speed
+                    self.recent_speeds.append(new_speed)
                 else:
                     if self.recent_speeds:
                         average_speed = sum(self.recent_speeds) / len(self.recent_speeds)
-                        #self.road_follower.base_speed = average_speed
-                        self.log(
-                            f"Ingen gyldig avstandsmåling. Bruker gjennomsnittlig hastighet: {average_speed:.2f}")
+                        self.road_follower.base_speed = average_speed
+                        self.log(f"Ugyldig avstand. Bruker gjennomsnittlig hastighet: {average_speed:.2f}.")
                     else:
-                        #self.road_follower.base_speed = self.platoon_speed
+                        self.road_follower.base_speed = self.platoon_speed
                         self.log(
-                            f"Ingen gyldig avstandsmåling eller historikk. Beholder platoon_speed: {self.platoon_speed:.2f}")
+                            f"Ugyldig avstand og ingen historikk. Beholder platoon_speed: {self.platoon_speed:.2f}.")
             else:
-                #self.road_follower.base_speed = self.platoon_speed or 0.3
+                self.road_follower.base_speed = self.platoon_speed
                 self.log("Avstandsmåling deaktivert eller leder. Base speed satt til standard.")
 
             time.sleep(0.1)
-
