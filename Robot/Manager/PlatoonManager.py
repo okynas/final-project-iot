@@ -22,6 +22,7 @@ class PlatoonManager:
         self.front_robot_id = None
         self.followers = []
         self.platoon_speed = road_follower.base_speed
+        self.steering_angle = 0
         self.last_heartbeat = time.time()
 
         self.mqtt_client.on_connect = self.on_connect
@@ -147,7 +148,7 @@ class PlatoonManager:
         while True:
             self.determine_leader()
 
-            steering_angle = self.road_follower.steering_angle
+            self.steering_angle = self.road_follower.steering_angle
 
             status = {
                 "robot_id": self.robot_id,
@@ -156,7 +157,7 @@ class PlatoonManager:
                 "state": self.road_follower.state.name,
                 "platoon_speed": self.platoon_speed,
                 "front_robot_id": self.front_robot_id,
-                "steering_angle": steering_angle,
+                "steering_angle": self.steering_angle,
                 "followers": self.followers,
                 "last_heartbeat": time.time()
             }
