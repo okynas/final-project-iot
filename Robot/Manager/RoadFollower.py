@@ -11,10 +11,10 @@ class RobotState(Enum):
     ERROR = auto()
 
 class RoadFollower:
-    def __init__(self, robot, camera, base_speed=0.4, min_speed=0.1, pid_params=None, log_callback=None):
+    def __init__(self, robot, camera, base_speed=0.4, min_speed=0.1, pid_params=None, log_callback=None, roi=0.6):
         self.robot = robot
         self.camera = camera
-        self.detector = LineDetector(camera=self.camera)
+        self.detector = LineDetector(camera=self.camera, roi=0.6)
         self.state = RobotState.IDLE
 
         pid_params = pid_params or {"kp": 0.016, "ki": 0.0000, "kd": 0.004}
