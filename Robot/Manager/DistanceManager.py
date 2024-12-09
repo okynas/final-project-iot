@@ -61,22 +61,22 @@ class DistanceManager:
 
                     adjusted_speed = min(self.max_speed, max(self.min_speed, self.platoon_speed + speed_adjustment))
 
-                    self.road_follower.base_speed = adjusted_speed
+                    #self.road_follower.base_speed = adjusted_speed
                     self.log(
                         f"Avstand: {distance} mm | Feil: {error} | PID-justering: {speed_adjustment:.2f} | "
                         f"Ny base_speed: {adjusted_speed:.2f}")
                 else:
                     if self.recent_speeds:
                         average_speed = sum(self.recent_speeds) / len(self.recent_speeds)
-                        self.road_follower.base_speed = average_speed
+                        #self.road_follower.base_speed = average_speed
                         self.log(
                             f"Ingen gyldig avstandsmåling. Bruker gjennomsnittlig hastighet: {average_speed:.2f}")
                     else:
-                        self.road_follower.base_speed = self.platoon_speed
+                        #self.road_follower.base_speed = self.platoon_speed
                         self.log(
                             f"Ingen gyldig avstandsmåling eller historikk. Beholder platoon_speed: {self.platoon_speed:.2f}")
             else:
-                self.road_follower.base_speed = self.platoon_speed or 0.3
+                #self.road_follower.base_speed = self.platoon_speed or 0.3
                 self.log("Avstandsmåling deaktivert eller leder. Base speed satt til standard.")
 
             time.sleep(0.1)
