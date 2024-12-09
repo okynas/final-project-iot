@@ -4,7 +4,7 @@ from Functions.DistanceSensor import DistanceSensor
 from Functions.PIDController import PIDController
 
 class DistanceManager:
-    def __init__(self, i2c_bus, i2c_address, road_follower, log_callback=None, target_distance=300, pid_params=None):
+    def __init__(self, i2c_bus, i2c_address, road_follower, log_callback=None, target_distance=400, pid_params=None):
         """
         Håndterer avstandsbasert logikk for platooning.
         """

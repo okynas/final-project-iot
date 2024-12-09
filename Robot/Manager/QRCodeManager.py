@@ -2,7 +2,7 @@ import time
 from Functions.QRCodeProcessor import QRCodeProcessor
 
 class QRCodeManager:
-    def __init__(self, camera, platoon_manager, distance_manager, log_callback=None, timeout=2.0):
+    def __init__(self, camera, platoon_manager, distance_manager, log_callback=None, timeout=10.0):
         """
         Håndterer QR kode platooning.
         """
