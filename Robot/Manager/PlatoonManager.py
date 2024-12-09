@@ -152,7 +152,7 @@ class PlatoonManager:
             self.determine_leader()
 
             self.steering_angle = self.road_follower.steering_angle
-            self.road_follower.is_leader = self.is_leader
+            self.road_follower._is_leader = self.is_leader
 
             status = {
                 "robot_id": self.robot_id,
