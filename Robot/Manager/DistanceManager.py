@@ -18,7 +18,7 @@ class DistanceManager:
         self.min_distance = 0
         self.max_distance = 1000
         self.min_speed = 0.1
-        self.max_speed = 0.4
+        self.max_speed = 0.25
         self.distance = 0
 
         self.recent_speeds = collections.deque(maxlen=10)
@@ -51,12 +51,12 @@ class DistanceManager:
                 self.distance = self.distance_sensor.get_distance()
 
                 if self.distance is not None and self.min_distance <= self.distance <= self.max_distance:
-                    if self.distance > self.target_distance + 50:
+                    if self.distance > self.target_distance + 100:
                         # Øk hastigheten
                         new_speed = self.road_follower.base_speed + 0.02
                         self.log(
                             f"Avstand {self.distance} mm er for stor. Beregnet hastighet før begrensning: {new_speed:.2f}.")
-                    elif self.distance < self.target_distance - 50:
+                    elif self.distance < self.target_distance - 100:
                         # Reduser hastigheten
                         new_speed = self.road_follower.base_speed - 0.02
                         self.log(

@@ -56,7 +56,7 @@ class RoadFollower:
         if distance <= 0:
             return max_delay
 
-        delay_factor = 0.01
+        delay_factor = 0.05
 
         calculated_delay = min_delay + (distance * delay_factor)
 
