@@ -6,11 +6,18 @@ logging.basicConfig(level=logging.INFO)
 
 class DistanceSensor:
     def __init__(self, i2c_bus=1, i2c_address=0x29, ranging_mode=1):
-        self.tof = VL53L1X.VL53L1X(i2c_bus=i2c_bus, i2c_address=i2c_address)
-        self.tof.open()
-        self.ranging_mode = ranging_mode
-        self.tof.start_ranging(self.ranging_mode)
-        logger.info(f"VL53L1X sensor initialisert på I2C-bus {i2c_bus} med adresse {hex(i2c_address)}")
+        self.tof = None
+        self.active = False
+
+        try:
+            self.tof = VL53L1X.VL53L1X(i2c_bus=i2c_bus, i2c_address=i2c_address)
+            self.tof.open()
+            self.ranging_mode = ranging_mode
+            self.tof.start_ranging(self.ranging_mode)
+            self.active = True
+            logger.info(f"VL53L1X sensor initialisert på I2C-bus {i2c_bus} med adresse {hex(i2c_address)}")
+        except Exception as e:
+            logger.error(f"Kunne ikke initialisere VL53L1X-sensoren: {e}")
 
     def get_distance(self):
         """

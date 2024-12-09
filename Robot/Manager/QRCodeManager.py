@@ -29,7 +29,6 @@ class QRCodeManager:
                 if qr_data != self.last_qr_data:
                     self.platoon_manager.front_robot_id = qr_data
                     self.platoon_manager.join_platoon(qr_data)
-                    self.distance_manager.enable_distance_measurement(True)
                     self.log(f"QR-kode funnet og identifisert som: {qr_data}")
                     self.last_qr_data = qr_data
                 self.last_update_time = current_time
@@ -39,7 +38,6 @@ class QRCodeManager:
                         self.log("Bilen foran har kjørt vekk!")
                     self.platoon_manager.leave_platoon()
                     self.platoon_manager.front_robot_id = None
-                    self.distance_manager.enable_distance_measurement(False)
                     self.last_qr_data = None
 
-            time.sleep(0.1)
+            time.sleep(0.05)

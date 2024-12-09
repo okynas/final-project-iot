@@ -66,7 +66,7 @@ def show_histograms(images, rois_dict, title):
             if roi_cropped.size == 0:
                 continue
 
-            hsv_roi = cv2.cvtColor(roi_cropped, cv2.COLOR_BGR2HSV)
+            hsv_roi = cv2.cvtColor(roi_cropped, cv2.COLOR_BGR2HLS)
             h_values.extend(hsv_roi[:, :, 0].flatten())
             s_values.extend(hsv_roi[:, :, 1].flatten())
             v_values.extend(hsv_roi[:, :, 2].flatten())

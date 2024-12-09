@@ -1,7 +1,6 @@
 import time
 import numpy as np
 from enum import Enum, auto
-
 from Functions.LineDetector import LineDetector
 from Functions.PIDController import PIDController
 

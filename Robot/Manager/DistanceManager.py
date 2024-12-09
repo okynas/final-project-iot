@@ -14,7 +14,7 @@ class DistanceManager:
         self.target_distance = target_distance
 
         self.platoon_speed = road_follower.base_speed
-        self.enabled = False
+        self.enabled = True
         self.min_distance = 0
         self.max_distance = 1000
         self.min_speed = 0.1
