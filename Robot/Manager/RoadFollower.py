@@ -23,7 +23,7 @@ class RoadFollower:
         self._steering_angle = 0
         self.base_speed = base_speed
         self.min_speed = min_speed
-        self._is_leader = True
+        self.is_leader = True
         self.max_steering = 1
         self.previous_time = time.time()
         self.log_callback = log_callback if log_callback else print
@@ -33,10 +33,8 @@ class RoadFollower:
         """Gir tilgang til styringsvinkelen."""
         return self._steering_angle
 
-    @property
-    def is_leader(self):
-        """Gir tilgang til is leader"""
-        return self._is_leader
+    def set_is_leader(self, is_leader):
+        self.is_leader = is_leader
 
     def log(self, message):
         """Logger en melding via log_callback."""
