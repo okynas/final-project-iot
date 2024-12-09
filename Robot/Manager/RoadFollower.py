@@ -36,6 +36,9 @@ class RoadFollower:
     def set_is_leader(self, is_leader):
         self.is_leader = is_leader
 
+    def set_steering_angle(self, steering_angle):
+        self._steering_angle = steering_angle
+
     def log(self, message):
         """Logger en melding via log_callback."""
         self.log_callback(message)
