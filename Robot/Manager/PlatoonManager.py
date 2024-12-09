@@ -22,6 +22,7 @@ class PlatoonManager:
         self.front_robot_id = None
         self.followers = []
         self.platoon_speed = road_follower.base_speed
+        self.control_value = road_follower.control_value
         self.last_heartbeat = time.time()
 
         self.mqtt_client.on_connect = self.on_connect
@@ -154,6 +155,7 @@ class PlatoonManager:
                 "state": self.road_follower.state.name,
                 "platoon_speed": self.platoon_speed,
                 "front_robot_id": self.front_robot_id,
+                "control_value": self.control_value,
                 "followers": self.followers,
                 "last_heartbeat": time.time()
             }

@@ -20,6 +20,7 @@ class RoadFollower:
         pid_params = pid_params or {"kp": 0.016, "ki": 0.0000, "kd": 0.004}
         self.pid = PIDController(kp=pid_params["kp"], ki=pid_params["ki"], kd=pid_params["kd"])
 
+        self.control_value = 0
         self.base_speed = base_speed
         self.min_speed = min_speed
         self.max_steering = 1
@@ -61,8 +62,8 @@ class RoadFollower:
             result = self.detector.process_frame()
             steering_angle = result['steering_angle']
 
-            control_value = self.pid.compute(steering_angle, dt)
-            control_value = np.clip(control_value, -self.max_steering, self.max_steering)
+            self.control_value = self.pid.compute(steering_angle, dt)
+            control_value = np.clip(self.control_value, -self.max_steering, self.max_steering)
 
             scaling_factor = np.exp(-abs(control_value) * 1)
             adjusted_speed = max(speed * scaling_factor, min_speed)
