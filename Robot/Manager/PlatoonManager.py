@@ -138,6 +138,9 @@ class PlatoonManager:
                         self.log(
                             f"Robot {self.robot_id} oppdaterte sin state til {new_state} basert på {self.front_robot_id}")
 
+                if "steering_angle" in data:
+                    self.road_follower._steering_angle = data["steering_angle"]
+
             if msg.topic.startswith("platoon/status/"):
                 self.update_platoon_structure(data)
         except Exception as e:

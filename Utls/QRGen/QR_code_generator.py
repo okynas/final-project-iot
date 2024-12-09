@@ -3,10 +3,10 @@ import qrcode
 from pylibdmtx.pylibdmtx import encode
 from PIL import Image
 
-names = ["001", "002", "003", "004"]
+names = ["Turbo-Turid", "Rolige-Randi", "Vinglete-Vera", "Rask-Rut"]
 
 cm_to_pixels = lambda cm: int(cm * 37.7952755906)
-size_cm = 11.4
+size_cm = 7
 size_pixels = cm_to_pixels(size_cm)
 
 qr_folder = "qr_codes"
