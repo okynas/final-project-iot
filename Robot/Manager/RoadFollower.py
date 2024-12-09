@@ -20,12 +20,17 @@ class RoadFollower:
         pid_params = pid_params or {"kp": 0.016, "ki": 0.0000, "kd": 0.004}
         self.pid = PIDController(kp=pid_params["kp"], ki=pid_params["ki"], kd=pid_params["kd"])
 
-        self.steering_angle = 0
+        self._steering_angle = 0
         self.base_speed = base_speed
         self.min_speed = min_speed
         self.max_steering = 1
         self.previous_time = time.time()
         self.log_callback = log_callback if log_callback else print
+
+    @property
+    def steering_angle(self):
+        """Gir tilgang til styringsvinkelen."""
+        return self._steering_angle
 
     def log(self, message):
         """Logger en melding via log_callback."""
@@ -41,7 +46,7 @@ class RoadFollower:
         if self.state != RobotState.RUNNING:
             return
 
-        self.steering_value = np.clip(steering_value, -1, 1)
+        steering_value = np.clip(steering_value, -1, 1)
         left_speed = speed * (1 + min(steering_value, 0))
         right_speed = speed * (1 - max(steering_value, 0))
         try:
@@ -60,9 +65,9 @@ class RoadFollower:
 
         try:
             result = self.detector.process_frame()
-            self.steering_angle = result['steering_angle']
+            self._steering_angle = result['steering_angle']
 
-            control_value = self.pid.compute(self.steering_angle, dt)
+            control_value = self.pid.compute(self._steering_angle, dt)
             control_value = np.clip(control_value, -self.max_steering, self.max_steering)
 
             scaling_factor = np.exp(-abs(control_value) * 1)
