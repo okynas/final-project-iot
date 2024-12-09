@@ -77,7 +77,7 @@ class RoadFollower:
             scaling_factor = np.exp(-abs(control_value) * 1)
             adjusted_speed = max(speed * scaling_factor, min_speed)
 
-            self.steer(control_value, adjusted_speed)
+            self.steer(control_value, self.base_speed)
         except Exception as e:
             self.log(f"Feil i follow_line_single: {e}")
             self.change_state(RobotState.ERROR)
