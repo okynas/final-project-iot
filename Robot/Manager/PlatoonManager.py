@@ -44,6 +44,8 @@ class PlatoonManager:
                 self.log(f"Robot {self.robot_id} er ikke lenger lederen.")
             self.is_leader = False
 
+        self.road_follower.set_is_leader(self.is_leader)
+
     def join_platoon(self, front_robot_id):
         """Legg roboten til som en følger bak front_robot_id."""
         self.front_robot_id = front_robot_id
@@ -151,8 +153,8 @@ class PlatoonManager:
         while True:
             self.determine_leader()
 
-            self.steering_angle = self.road_follower.steering_angle
-            self.road_follower.set_is_leader = self.is_leader
+            if self.is_leader:
+                self.steering_angle = self.road_follower.steering_angle
 
             status = {
                 "robot_id": self.robot_id,

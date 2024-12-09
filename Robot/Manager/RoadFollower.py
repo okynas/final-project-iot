@@ -99,6 +99,7 @@ class RoadFollower:
             self.change_state(RobotState.ERROR)
 
     def follow_robot(self, speed, min_speed):
+        """Følg roboten foran (følger-oppførsel)."""
         if self.state != RobotState.RUNNING:
             return
 
